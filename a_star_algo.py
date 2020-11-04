@@ -18,13 +18,9 @@ def h_heuristic(curr_node, end_node):
        :arg
        curr_node (node object) - current node being checked
        end_node (node object) - target node
-
-       :return
-       h (int) - calculated value
     """
 
-    h = math.sqrt(((end_node.x - curr_node.x)**2) + ((end_node.y - curr_node.y)**2)))
-    return h
+    curr_node.h = math.sqrt(((end_node.x - curr_node.x)**2) + ((end_node.y - curr_node.y)**2)))
 
 
 def g_heuristic():
