@@ -10,6 +10,8 @@ class Node:
         self.g = g
         self.h = h
         self.color = color
+        self.neighbors = []
+        self.neighbor_index = 0
 
     def is_wall(self):
         return self.color == "black"
@@ -30,14 +32,27 @@ class Node:
             f_val = None
         return f_val
 
-    def next_node(self, node_obj_lst):
-        # TODO: find next node using pixels
-        #  check if already exits in node_obj_lst
-        #  if not create an obj out of it and add it to lst
-        #  Need to convert this into a find_neighbors function
-        #  -which pops off any unusable neighbors from a lst
-        new_x = self.x + self.width
-        new_y = self.y + self.height
-        next_n = Node(new_x, new_y)  # Dummy value, not sure if correct
-        node_obj_lst.append(next_n)
-        return next_n, node_obj_lst
+    def next_node(self):
+        if self.neighbors and self.neighbor_index < len(self.neighbors):
+            next_n = self.neighbors[self.neighbor_index]
+            self.neighbor_index += 1
+        else:
+            next_n = None
+        return next_n
+
+    def find_neighbors(self, node_obj_lst, grid_wid, grid_h):
+        # Can be optimized
+        # Based on input from front end - currently works for lst containing start, walls, and end(?) from front-end
+        x_values = [self.x - self.width, self.x, self.x + self.width]
+        y_values = [self.y - self.height, self.y, self.y + self.height]
+        node_map = {}
+        for node in node_obj_lst:
+            node_map[(node.x, node.y)] = node.color
+        for x_val in x_values:
+            for y_val in y_values:
+                if (0 <= x_val <= grid_wid and 0 <= y_val <= grid_h) and not (x_val == self.x and y_val == self.y):
+                    if (x_val, y_val) not in node_map:
+                        self.neighbors.append(Node(x_val, y_val, last_node=self))
+                    elif node.is_end():  # may not need, can omit if we take end node out of node obj list
+                        self.neighbors.append(Node(x_val, y_val, node.color, self))
+
