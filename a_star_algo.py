@@ -1,12 +1,15 @@
-from queue import PriorityQueue as pq
+from queue import PriorityQueue
 import math
 from flask import Flask
 from node_object import Node
 
 
-open_nodes = []
+# TODO update start and end when acquiring information from frontend
+start = None
+end = None
+open_nodes = PriorityQueue()
+closed_nodes = []
 node_objects_list = []
-# Initialize priority queue
 
 
 def a_star():
@@ -22,34 +25,54 @@ def h_heuristic(curr_node, end_node):
     """Calculates approximate distance between two nodes
 
        Used to calculate the distance between two points
-       on a graph, which will be used to determine the f
-       heuristic in the A* algorithm
+       on a graph, which will be used to determine f
+       values in the A* algorithm
 
        :arg
-       curr_node (node object) - current node being checked
+       curr_node (node object) - current node who's h is being calculated
        end_node (node object) - target node
+
+       :return
+       h (float) - h value for current node, rounded to one decimal place
     """
 
-    curr_node.h = math.sqrt(((end_node.x - curr_node.x) ** 2) + ((end_node.y - curr_node.y) ** 2))
+    # proportional to g by converting pixels into cost units
+    dx = (end_node.x - curr_node.x) // end_node.width
+    dy = (end_node.y - curr_node.y) // end_node.height
+    h = math.sqrt((dx ** 2) + (dy ** 2))
+    # TODO insert logic to check whether to put calculated h in node obj (or can be done during algo)
+    return round(h, 1)
 
 
-def g_heuristic(current_n):
+def g_val(current_n, next_n):
     """Calculates cost of traveling from the starting node to current node
 
        Used to calculate the current cost of traveling to the current nodes
-       from the starting node, which will be used to determine the f
-       heuristic in the A* algorithm
+       from the starting node, which will be used to determine f
+       values in the A* algorithm
 
        :arg
        current_n (node object) - current node being checked
+       next_n (node object) - neighbor of current_n who's g is being calculated
+
+       :return
+       g_of_neighbor (float) - g cost of neighbor rounded to 1 decimal
     """
 
-    # TODO need to fix method logic
     current_n.g += current_n.last_node.g  # Don't know if this works
+    x_diff = abs(current_n.x - next_n.x) // current_n.width
+    y_diff = abs(current_n.y - next_n.y) // current_n.height
+    if x_diff == y_diff:
+        travel_cost = round(math.sqrt(2), 1)
+    else:  # shouldn't have another case, but not sure, this is second case: elif x_diff == 0 or y_diff == 0:
+        travel_cost = 1
+    g_of_neighbor = current_n.g + travel_cost
+    # TODO insert logic to check whether to put calculated h in node obj (or can be done during algo)
+    return g_of_neighbor
 
 
-def f_heuristic(current_node):
-    """Actual heuristic used to compare the optimal paths between nodes
+def f_val(current_node):  # may not need
+    """Actual value used to compare the optimal paths between nodes
 
        :arg
        current_n (node object) - current node being checked
