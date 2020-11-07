@@ -2,6 +2,7 @@ from queue import PriorityQueue
 import math
 from flask import Flask
 from node_object import Node
+from random import randint
 
 
 # TODO update start and end when acquiring information from frontend
@@ -10,6 +11,29 @@ end = None
 open_nodes = PriorityQueue()
 closed_nodes = []
 node_objects_list = []
+
+
+def testing():
+    num_walls = randint(1, 10)
+    start_node = Node(randint(0, 200), randint(0, 200), "green")
+    x = randint(0, 200)
+    y = randint(0, 200)
+    while x == start_node.x or y == start_node.y:
+        x = randint(0, 200)
+        y = randint(0, 200)
+    end_node = Node(x, y, "green")
+    cords_used_x = [start_node.x, end_node.x]
+    cords_used_y = [start_node.y, end_node.y]
+    for _ in num_walls:
+        x1 = randint(0, 200)
+        y1 = randint(0, 200)
+        while x1 in cords_used_x or y1 in cords_used_y:
+            x1 = randint(0, 200)
+            y1 = randint(0, 200)
+        generated_node = Node(x1, y1, "black")
+        node_objects_list.append(generated_node)
+        cords_used_x.append(x1)
+        cords_used_y.append(y1)
 
 
 def a_star():
@@ -33,15 +57,15 @@ def h_heuristic(curr_node, end_node):
        end_node (node object) - target node
 
        :return
-       h (float) - h value for current node, rounded to one decimal place
+       curr_node.h (float) - h value for current node, rounded to one decimal place
     """
 
     # proportional to g by converting pixels into cost units
     dx = (end_node.x - curr_node.x) // end_node.width
     dy = (end_node.y - curr_node.y) // end_node.height
     h = math.sqrt((dx ** 2) + (dy ** 2))
-    # TODO insert logic to check whether to put calculated h in node obj (or can be done during algo)
-    return round(h, 1)
+    curr_node.h = round(h, 1)
+    return curr_node.h
 
 
 def g_val(current_n, next_n):
@@ -59,7 +83,7 @@ def g_val(current_n, next_n):
        g_of_neighbor (float) - g cost of neighbor rounded to 1 decimal
     """
 
-    current_n.g += current_n.last_node.g  # Don't know if this works
+    # current_n.g += current_n.last_node.g  # Don't know if this works
     x_diff = abs(current_n.x - next_n.x) // current_n.width
     y_diff = abs(current_n.y - next_n.y) // current_n.height
     if x_diff == y_diff:
