@@ -2,7 +2,7 @@ from queue import PriorityQueue
 import math
 from flask import Flask
 from node_object import Node
-from random import randint
+from random import randint, randrange
 
 
 # TODO update start and end when acquiring information from frontend
@@ -11,33 +11,96 @@ end = None
 open_nodes = PriorityQueue()
 closed_nodes = []
 node_objects_list = []
+grid_w = 180
+grid_h = 180
+
+
+def a_star():
+    print("Starting Algo...")
+    global start, end, open_nodes, closed_nodes, node_objects_list, grid_w, grid_h
+    open_nodes.put((start.f, start))  # should be taken care of in process_input
+    while not open_nodes.empty():
+        current_node = open_nodes.get()[1]
+        current_node.find_neighbors(node_objects_list, grid_w, grid_h)
+        closed_nodes.append(current_node)
+        print("Expanding Node at ", current_node.x, ", ", current_node.y, " f = ", current_node.f," h=", current_node.h)
+        if current_node.x != end.x or current_node.y != end.y:
+            for neighbor_node in current_node.neighbors:
+                h_heuristic(neighbor_node, end)
+                g_val(current_node, neighbor_node)
+                f_val(neighbor_node)
+                if check_closed_list(closed_nodes, neighbor_node):
+                    print("skipped")
+                    continue
+                if check_open_list(open_nodes.queue, neighbor_node):
+                    print("skipped")
+                    continue
+                print("Neigbhor F: ", neighbor_node.f, " for node at ", neighbor_node.x, ", ",
+                      neighbor_node.y, " h = ", neighbor_node.h, " g = ", neighbor_node.g)
+                try:
+                    closed_nodes.remove(neighbor_node)
+                    open_nodes.queue.remove((neighbor_node.f, neighbor_node))
+                    print("removed")
+                except ValueError:
+                    print("Node was not in open nor closed lists")
+                open_nodes.put((neighbor_node.f, neighbor_node))
+        else:
+            path_found(current_node)
+            return "Yay"  # Dummy value
+    return "Failed to find Viable path"
+
+
+def check_open_list(node_lst, checking_node):
+    for f, node_obj in node_lst:
+        if checking_node.x == node_obj.x and checking_node.y == node_obj.y:
+            if checking_node.f >= node_obj.f:
+                return True
+    return False
+
+
+def check_closed_list(lst_of_nodes, node):
+    for list_node in lst_of_nodes:
+        if node.x == list_node.x and node.y == list_node.y:
+            if node.f >= list_node.f:
+                return True
+    return False
+
+
+def path_found(c_node):
+    # TODO Need to implement
+    print("Path found!")
 
 
 def testing():
+    global grid_w, grid_h, start, end, node_objects_list
     num_walls = randint(1, 10)
-    start_node = Node(randint(0, 200), randint(0, 200), "green")
-    x = randint(0, 200)
-    y = randint(0, 200)
-    while x == start_node.x or y == start_node.y:
-        x = randint(0, 200)
-        y = randint(0, 200)
-    end_node = Node(x, y, "green")
-    cords_used_x = [start_node.x, end_node.x]
-    cords_used_y = [start_node.y, end_node.y]
-    for _ in num_walls:
-        x1 = randint(0, 200)
-        y1 = randint(0, 200)
+    start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), "green", g=0)
+    start.g = 0
+    print("Start coords: ", start.x, ", ", start.y)
+    x = randrange(0, grid_w + 1, 20)
+    y = randrange(0, grid_h + 1, 20)
+    node_objects_list.append(start)
+    while x == start.x or y == start.y:
+        x = randrange(0, grid_w + 1, 20)
+        y = randrange(0, grid_h + 1, 20)
+    end = Node(x, y, "green")
+    h_heuristic(start, end)
+    f_val(start)
+    print("End coords: ", x, ", ", y)
+    cords_used_x = [start.x, end.x]
+    cords_used_y = [start.y, end.y]
+    for _ in range(1, num_walls + 1):
+        x1 = randrange(0, grid_w + 1, 20)
+        y1 = randrange(0, grid_h + 1, 20)
         while x1 in cords_used_x or y1 in cords_used_y:
-            x1 = randint(0, 200)
-            y1 = randint(0, 200)
+            x1 = randrange(0, grid_w + 1, 20)
+            y1 = randrange(0, grid_h + 1, 20)
         generated_node = Node(x1, y1, "black")
         node_objects_list.append(generated_node)
         cords_used_x.append(x1)
         cords_used_y.append(y1)
-
-
-def a_star():
-    pass
+        print("Wall Coords: ", x1, ", ", y1)
+    print("Done Generating test data\n")
 
 
 def process_input(json_file):
@@ -87,11 +150,13 @@ def g_val(current_n, next_n):
     x_diff = abs(current_n.x - next_n.x) // current_n.width
     y_diff = abs(current_n.y - next_n.y) // current_n.height
     if x_diff == y_diff:
-        travel_cost = round(math.sqrt(2), 1)
+        cost = math.sqrt(2)
+        travel_cost = round(cost, 1)
     else:  # shouldn't have another case, but not sure, this is second case: elif x_diff == 0 or y_diff == 0:
         travel_cost = 1
     g_of_neighbor = current_n.g + travel_cost
     # TODO insert logic to check whether to put calculated h in node obj (or can be done during algo)
+    next_n.g = round(g_of_neighbor, 1)
     return g_of_neighbor
 
 
@@ -101,7 +166,7 @@ def f_val(current_node):  # may not need
        :arg
        current_n (node object) - current node being checked
     """
-    current_node.f = current_node.g + current_node.h
+    current_node.f = round(current_node.g + current_node.h, 1)
 
 
 def save_state():
@@ -109,14 +174,18 @@ def save_state():
 
 
 # setting up app for API
-app = Flask(__name__)
-app.config["DEBUG"] = True
+#app = Flask(__name__)
+#app.config["DEBUG"] = True
 
 
-@app.route('/AStarAlgo', methods=['GET'])
-def a_star_algo_runner():
-    pass
+#@app.route('/AStarAlgo', methods=['GET'])
+#def a_star_algo_runner():
+#    pass
 
 
 # Run app
-app.run()
+#app.run()
+if __name__ == "__main__":
+    testing()
+    s = a_star()
+    print(s)
