@@ -13,6 +13,9 @@ class Node:
         self.neighbors = []
         self.neighbor_index = 0
 
+    def __lt__(self, other):  # used when two Node instances are compared and have same f_val in PriorityQueue
+        return self           # could use h-heuristic as tiebreaker
+
     def is_wall(self):
         return self.color == "black"
 
@@ -32,7 +35,7 @@ class Node:
             f_val = None
         return f_val
 
-    def next_node(self):
+    def next_node(self):  # might not need
         if self.neighbors and self.neighbor_index < len(self.neighbors):
             next_n = self.neighbors[self.neighbor_index]
             self.neighbor_index += 1
@@ -53,6 +56,5 @@ class Node:
                 if (0 <= x_val <= grid_wid and 0 <= y_val <= grid_h) and not (x_val == self.x and y_val == self.y):
                     if (x_val, y_val) not in node_map:
                         self.neighbors.append(Node(x_val, y_val, last_node=self))
-                    elif node.is_end():  # may not need, can omit if we take end node out of node obj list
-                        self.neighbors.append(Node(x_val, y_val, node.color, self))
+
 
