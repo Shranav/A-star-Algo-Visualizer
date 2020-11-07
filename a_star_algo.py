@@ -4,7 +4,6 @@ from flask import Flask
 from node_object import Node
 from random import randint, randrange
 
-
 # TODO update start and end when acquiring information from frontend
 start = None
 end = None
@@ -18,22 +17,25 @@ grid_h = 180
 def a_star():
     print("Starting Algo...")
     global start, end, open_nodes, closed_nodes, node_objects_list, grid_w, grid_h
+    h_heuristic(start, end)
+    f_val(start)
     open_nodes.put((start.f, start))  # should be taken care of in process_input
     while not open_nodes.empty():
         current_node = open_nodes.get()[1]
         current_node.find_neighbors(node_objects_list, grid_w, grid_h)
         closed_nodes.append(current_node)
-        print("Expanding Node at ", current_node.x, ", ", current_node.y, " f = ", current_node.f," h=", current_node.h)
+        print("Expanding Node at ", current_node.x, ", ", current_node.y, " f = ", current_node.f, " h=",
+              current_node.h)
         if current_node.x != end.x or current_node.y != end.y:
             for neighbor_node in current_node.neighbors:
                 h_heuristic(neighbor_node, end)
                 g_val(current_node, neighbor_node)
                 f_val(neighbor_node)
                 if check_closed_list(closed_nodes, neighbor_node):
-                    print("skipped")
+                    #print("skipped")
                     continue
                 if check_open_list(open_nodes.queue, neighbor_node):
-                    print("skipped")
+                    #print("skipped")
                     continue
                 print("Neigbhor F: ", neighbor_node.f, " for node at ", neighbor_node.x, ", ",
                       neighbor_node.y, " h = ", neighbor_node.h, " g = ", neighbor_node.g)
@@ -42,12 +44,13 @@ def a_star():
                     open_nodes.queue.remove((neighbor_node.f, neighbor_node))
                     print("removed")
                 except ValueError:
-                    print("Node was not in open nor closed lists")
+                    #print("Node was not in open nor closed lists")
+                    pass
                 open_nodes.put((neighbor_node.f, neighbor_node))
         else:
             path_found(current_node)
-            return "Yay"  # Dummy value
-    return "Failed to find Viable path"
+            return "A path has been found!"
+    return "FAILED: Did not find a viable path"
 
 
 def check_open_list(node_lst, checking_node):
@@ -67,15 +70,39 @@ def check_closed_list(lst_of_nodes, node):
 
 
 def path_found(c_node):
-    # TODO Need to implement
-    print("Path found!")
+    end_node = c_node
+    node_pointer = c_node
+    path_order = [("x=" + str(end_node.x), " y=" + str(end_node.y), " f=" + str(end_node.f), " g=" + str(end_node.g),
+                   " h= " + str(end_node.h), end_node)]
+    while node_pointer.x != start.x or node_pointer.y != start.y:
+        node_pointer = node_pointer.last_node
+        path_order.append(("x=" + str(node_pointer.x), " y=" + str(node_pointer.y), " f=" + str(node_pointer.f),
+                           " g=" + str(node_pointer.g), " h= " + str(node_pointer.h), node_pointer))
+    print("\n\nFound path:")
+    for ind in range(1, len(path_order) + 1):
+        print(str(ind) + ": " + str(path_order[-ind]))
+
+
+def single_case_test(num_walls=0):
+    global start, end, node_objects_list
+    start = Node(0, 20, "green", g=0)
+    end = Node(40, 80, "blue")
+    node_objects_list.append(start)
+    walls = [Node(0, 40, "black"), Node(20, 40, "black"), Node(40, 40, "black"), Node(20, 20, "black"), Node(0, 0, "black"), Node(20, 0, "black")]
+    if 0 < num_walls <= len(walls):
+        gen_ed_walls = walls[0:num_walls]
+        node_objects_list += walls[0:num_walls]
+    print("Start:", start.x, ",", start.y)
+    print("End:", end.x, ",", end.y)
+    for wall in gen_ed_walls:
+        print("Wall", wall.x, ",", wall,y)
+    print("\n\n")
 
 
 def testing():
     global grid_w, grid_h, start, end, node_objects_list
     num_walls = randint(1, 10)
     start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), "green", g=0)
-    start.g = 0
     print("Start coords: ", start.x, ", ", start.y)
     x = randrange(0, grid_w + 1, 20)
     y = randrange(0, grid_h + 1, 20)
@@ -83,7 +110,7 @@ def testing():
     while x == start.x or y == start.y:
         x = randrange(0, grid_w + 1, 20)
         y = randrange(0, grid_h + 1, 20)
-    end = Node(x, y, "green")
+    end = Node(x, y, "blue")
     h_heuristic(start, end)
     f_val(start)
     print("End coords: ", x, ", ", y)
@@ -174,18 +201,20 @@ def save_state():
 
 
 # setting up app for API
-#app = Flask(__name__)
-#app.config["DEBUG"] = True
+# app = Flask(__name__)
+# app.config["DEBUG"] = True
 
 
-#@app.route('/AStarAlgo', methods=['GET'])
-#def a_star_algo_runner():
+# @app.route('/AStarAlgo', methods=['GET'])
+# def a_star_algo_runner():
 #    pass
 
 
 # Run app
-#app.run()
+# app.run()
 if __name__ == "__main__":
-    testing()
+    # testing()
+    walls_num = input("Num walls? ")
+    single_case_test(int(walls_num))
     s = a_star()
     print(s)
