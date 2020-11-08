@@ -1,6 +1,6 @@
 class Node:
 
-    def __init__(self, x, y, color="white", last_node=None, g=9999, h=9999, width=20, height=20):
+    def __init__(self, x, y, color=(255, 255, 255), last_node=None, g=9999, h=9999, width=20, height=20):
         self.x = x
         self.y = y
         self.last_node = last_node
@@ -17,13 +17,13 @@ class Node:
         return self           # could use h-heuristic as tiebreaker
 
     def is_wall(self):
-        return self.color == "black"
+        return self.color == (0, 0, 0)
 
     def is_start(self):
-        return self.color == "green"
+        return self.color == (0, 255, 0)
 
     def is_end(self):
-        return self.color == "blue"
+        return self.color == (0, 0, 255)
 
     def set_last_node(self, parent):  # may not need but will improve readability
         self.last_node = parent

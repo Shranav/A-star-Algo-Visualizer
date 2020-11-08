@@ -12,17 +12,23 @@ closed_nodes = []
 node_objects_list = []
 grid_w = 180
 grid_h = 180
+black = (0, 0, 0)
+green = (0, 255, 0)
+blue = (0, 0, 255)
+yellow = (248, 255, 1)
+red = (255, 0, 0)
 
 
 def a_star():
     print("Starting Algo...")
-    global start, end, open_nodes, closed_nodes, node_objects_list, grid_w, grid_h
+    global start, end, open_nodes, closed_nodes, node_objects_list, grid_w, grid_h, red, yellow
     h_heuristic(start, end)
     f_val(start)
     open_nodes.put((start.f, start))  # should be taken care of in process_input
     while not open_nodes.empty():
         current_node = open_nodes.get()[1]
         current_node.find_neighbors(node_objects_list, grid_w, grid_h)
+        current_node.color = red
         closed_nodes.append(current_node)
         print("Expanding Node at ", current_node.x, ", ", current_node.y, " f = ", current_node.f, " h=",
               current_node.h)
@@ -47,6 +53,7 @@ def a_star():
                     #print("Node was not in open nor closed lists")
                     pass
                 open_nodes.put((neighbor_node.f, neighbor_node))
+                neighbor_node.color = yellow
         else:
             path_found(current_node)
             return "A path has been found!"
@@ -84,11 +91,12 @@ def path_found(c_node):
 
 
 def single_case_test(num_walls=0):
-    global start, end, node_objects_list
-    start = Node(0, 20, "green", g=0)
-    end = Node(40, 80, "blue")
+    global start, end, node_objects_list, green, blue, black
+    start = Node(0, 20, green, g=0)
+    end = Node(40, 80, blue)
     node_objects_list.append(start)
-    walls = [Node(0, 40, "black"), Node(20, 40, "black"), Node(40, 40, "black"), Node(20, 20, "black"), Node(0, 0, "black"), Node(20, 0, "black")]
+    walls = [Node(0, 40, black), Node(20, 40, black), Node(40, 40, black), Node(20, 20, black), Node(0, 0, black),
+             Node(20, 0, black)]
     if 0 < num_walls <= len(walls):
         gen_ed_walls = walls[0:num_walls]
         node_objects_list += walls[0:num_walls]
@@ -100,9 +108,9 @@ def single_case_test(num_walls=0):
 
 
 def testing():
-    global grid_w, grid_h, start, end, node_objects_list
+    global grid_w, grid_h, start, end, node_objects_list, green, black, blue
     num_walls = randint(1, 10)
-    start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), "green", g=0)
+    start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), green, g=0)
     print("Start coords: ", start.x, ", ", start.y)
     x = randrange(0, grid_w + 1, 20)
     y = randrange(0, grid_h + 1, 20)
@@ -110,7 +118,7 @@ def testing():
     while x == start.x or y == start.y:
         x = randrange(0, grid_w + 1, 20)
         y = randrange(0, grid_h + 1, 20)
-    end = Node(x, y, "blue")
+    end = Node(x, y, blue)
     h_heuristic(start, end)
     f_val(start)
     print("End coords: ", x, ", ", y)
@@ -122,7 +130,7 @@ def testing():
         while x1 in cords_used_x or y1 in cords_used_y:
             x1 = randrange(0, grid_w + 1, 20)
             y1 = randrange(0, grid_h + 1, 20)
-        generated_node = Node(x1, y1, "black")
+        generated_node = Node(x1, y1, black)
         node_objects_list.append(generated_node)
         cords_used_x.append(x1)
         cords_used_y.append(y1)
@@ -213,8 +221,8 @@ def save_state():
 # Run app
 # app.run()
 if __name__ == "__main__":
-    # testing()
-    walls_num = input("Num walls? ")
-    single_case_test(int(walls_num))
+    testing()
+    #walls_num = input("Num walls? ")
+    #single_case_test(int(walls_num))
     s = a_star()
     print(s)
