@@ -1,5 +1,7 @@
 class Node:
 
+    # TODO Finish adding doc strings and clean up code and check globals on each method
+
     def __init__(self, x, y, color=(255, 255, 255), last_node=None, g=9999, h=9999, width=20, height=20):
         self.x = x
         self.y = y
@@ -14,7 +16,7 @@ class Node:
         self.neighbor_index = 0
 
     def __lt__(self, other):  # used when two Node instances are compared and have same f_val in PriorityQueue
-        return self           # could use h-heuristic as tiebreaker
+        return self  # could use h-heuristic as tiebreaker
 
     def is_wall(self):
         return self.color == (0, 0, 0)
@@ -56,5 +58,3 @@ class Node:
                 if (0 <= x_val <= grid_wid and 0 <= y_val <= grid_h) and not (x_val == self.x and y_val == self.y):
                     if (x_val, y_val) not in node_map:
                         self.neighbors.append(Node(x_val, y_val, last_node=self))
-
-
