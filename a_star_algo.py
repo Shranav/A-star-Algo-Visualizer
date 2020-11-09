@@ -5,6 +5,9 @@ from node_object import Node
 from random import randint, randrange
 
 # TODO update start and end when acquiring information from frontend
+#  Finish adding doc strings and clean up code and check globals on each method
+#  Check to make sure algorithm is working as intended
+
 start = None
 end = None
 open_nodes = PriorityQueue()
@@ -14,6 +17,8 @@ all_objs_node = []
 all_states = []
 grid_w = 180
 grid_h = 180
+node_w = 20
+node_h = 20
 black = (0, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
@@ -28,14 +33,14 @@ def start_algo(lst_coords):
         x = pos[0]
         y = pos[1]
         if color == green:
-            node_new = Node(x, y, color, g=0)
+            node_new = Node(x, y, color, g=0, width=node_w, height=node_h)
             start = node_new
         elif color == blue:
-            end_node_new = Node(x, y, color)
+            end_node_new = Node(x, y, color, width=node_w, height=node_h)
             end = end_node_new
             all_objs_node.append(end_node_new)
         else:
-            node_new = Node(x, y, color)
+            node_new = Node(x, y, color, width=node_w, height=node_h)
         node_objects_list.append(node_new)
         all_objs_node.append(node_new)
     h_heuristic(start, end)
@@ -120,11 +125,12 @@ def path_found(c_node):
 
 def single_case_test(num_walls=0):
     global start, end, node_objects_list, green, blue, black
-    start = Node(0, 20, green, g=0)
-    end = Node(40, 80, blue)
+    start = Node(0, 20, green, g=0, width=node_w, height=node_h)
+    end = Node(40, 80, blue, width=node_w, height=node_h)
     node_objects_list.append(start)
-    walls = [Node(0, 40, black), Node(20, 40, black), Node(40, 40, black), Node(20, 20, black), Node(0, 0, black),
-             Node(20, 0, black)]
+    walls = [Node(0, 40, black, width=node_w, height=node_h), Node(20, 40, black, width=node_w, height=node_h),
+             Node(40, 40, black, width=node_w, height=node_h), Node(20, 20, black, width=node_w, height=node_h),
+             Node(0, 0, black, width=node_w, height=node_h), Node(20, 0, black, width=node_w, height=node_h)]
     if 0 < num_walls <= len(walls):
         gen_ed_walls = walls[0:num_walls]
         node_objects_list += walls[0:num_walls]
@@ -138,7 +144,7 @@ def single_case_test(num_walls=0):
 def testing():
     global grid_w, grid_h, start, end, node_objects_list, green, black, blue
     num_walls = randint(1, 10)
-    start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), green, g=0)
+    start = Node(randrange(0, grid_w + 1, 20), randrange(0, grid_h + 1, 20), green, g=0, width=node_w, height=node_h)
     print("Start coords: ", start.x, ", ", start.y)
     x = randrange(0, grid_w + 1, 20)
     y = randrange(0, grid_h + 1, 20)
@@ -146,7 +152,7 @@ def testing():
     while x == start.x or y == start.y:
         x = randrange(0, grid_w + 1, 20)
         y = randrange(0, grid_h + 1, 20)
-    end = Node(x, y, blue)
+    end = Node(x, y, blue, width=node_w, height=node_h)
     h_heuristic(start, end)
     f_val(start)
     print("End coords: ", x, ", ", y)
@@ -158,7 +164,7 @@ def testing():
         while x1 in cords_used_x or y1 in cords_used_y:
             x1 = randrange(0, grid_w + 1, 20)
             y1 = randrange(0, grid_h + 1, 20)
-        generated_node = Node(x1, y1, black)
+        generated_node = Node(x1, y1, black, width=node_w, height=node_h)
         node_objects_list.append(generated_node)
         cords_used_x.append(x1)
         cords_used_y.append(y1)
@@ -246,6 +252,25 @@ def save_state():
 
 def get_states():
     return all_states
+
+
+def reset():
+    global start, end, open_nodes, closed_nodes, node_objects_list, all_objs_node, all_states
+    start = None
+    end = None
+    open_nodes = PriorityQueue()
+    closed_nodes = []
+    node_objects_list = []
+    all_objs_node = []
+    all_states = []
+
+
+def set_grid_dim(w, h, n_w, n_h):
+    global grid_w, grid_h, node_w
+    grid_w = w
+    grid_h = h
+    node_w = n_w
+    node_h = n_h
 
 
 # setting up app for API
