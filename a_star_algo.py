@@ -10,6 +10,8 @@ end = None
 open_nodes = PriorityQueue()
 closed_nodes = []
 node_objects_list = []
+all_objs_node = []
+all_states = []
 grid_w = 180
 grid_h = 180
 black = (0, 0, 0)
@@ -17,18 +19,40 @@ green = (0, 255, 0)
 blue = (0, 0, 255)
 yellow = (248, 255, 1)
 red = (255, 0, 0)
+cyan = (24, 255, 255)
+
+
+def start_algo(lst_coords):
+    global start, end, node_objects_list, all_objs_node, green, blue, open_nodes
+    for pos, color in lst_coords:
+        x = pos[0]
+        y = pos[1]
+        if color == green:
+            node_new = Node(x, y, color, g=0)
+            start = node_new
+        elif color == blue:
+            end_node_new = Node(x, y, color)
+            end = end_node_new
+            all_objs_node.append(end_node_new)
+        else:
+            node_new = Node(x, y, color)
+        node_objects_list.append(node_new)
+        all_objs_node.append(node_new)
+    h_heuristic(start, end)
+    f_val(start)
+    open_nodes.put((start.f, start))
+    save_state()
+    print(a_star())
 
 
 def a_star():
     print("Starting Algo...")
     global start, end, open_nodes, closed_nodes, node_objects_list, grid_w, grid_h, red, yellow
-    h_heuristic(start, end)
-    f_val(start)
-    open_nodes.put((start.f, start))  # should be taken care of in process_input
     while not open_nodes.empty():
         current_node = open_nodes.get()[1]
         current_node.find_neighbors(node_objects_list, grid_w, grid_h)
         current_node.color = red
+        save_state()
         closed_nodes.append(current_node)
         print("Expanding Node at ", current_node.x, ", ", current_node.y, " f = ", current_node.f, " h=",
               current_node.h)
@@ -54,6 +78,8 @@ def a_star():
                     pass
                 open_nodes.put((neighbor_node.f, neighbor_node))
                 neighbor_node.color = yellow
+                all_objs_node.append(neighbor_node)
+                save_state()
         else:
             path_found(current_node)
             return "A path has been found!"
@@ -83,6 +109,8 @@ def path_found(c_node):
                    " h= " + str(end_node.h), end_node)]
     while node_pointer.x != start.x or node_pointer.y != start.y:
         node_pointer = node_pointer.last_node
+        node_pointer.color = cyan
+        save_state()
         path_order.append(("x=" + str(node_pointer.x), " y=" + str(node_pointer.y), " f=" + str(node_pointer.f),
                            " g=" + str(node_pointer.g), " h= " + str(node_pointer.h), node_pointer))
     print("\n\nFound path:")
@@ -103,7 +131,7 @@ def single_case_test(num_walls=0):
     print("Start:", start.x, ",", start.y)
     print("End:", end.x, ",", end.y)
     for wall in gen_ed_walls:
-        print("Wall", wall.x, ",", wall,y)
+        print("Wall", wall.x, ",", wall.y)
     print("\n\n")
 
 
@@ -136,11 +164,6 @@ def testing():
         cords_used_y.append(y1)
         print("Wall Coords: ", x1, ", ", y1)
     print("Done Generating test data\n")
-
-
-def process_input(json_file):
-    # TODO create objects of walls, start, and end
-    pass
 
 
 def h_heuristic(curr_node, end_node):
@@ -190,7 +213,6 @@ def g_val(current_n, next_n):
     else:  # shouldn't have another case, but not sure, this is second case: elif x_diff == 0 or y_diff == 0:
         travel_cost = 1
     g_of_neighbor = current_n.g + travel_cost
-    # TODO insert logic to check whether to put calculated h in node obj (or can be done during algo)
     next_n.g = round(g_of_neighbor, 1)
     return g_of_neighbor
 
@@ -205,7 +227,25 @@ def f_val(current_node):  # may not need
 
 
 def save_state():
-    pass
+    global all_objs_node, all_states, green, blue, start, end
+    state = []
+    for node in all_objs_node:
+        if node.x == start.x and node.y == start.y:
+            color = green
+        elif node.x == end.x and node.y == end.y:
+            color = blue
+        else:
+            color = node.color
+        x_coord = node.x
+        y_coord = node.y
+        dim = (node.width, node.height)
+        node_s = ((x_coord, y_coord), color, dim)
+        state.append(node_s)
+    all_states.append(state)
+
+
+def get_states():
+    return all_states
 
 
 # setting up app for API
@@ -221,8 +261,17 @@ def save_state():
 # Run app
 # app.run()
 if __name__ == "__main__":
-    testing()
+    #testing()
     #walls_num = input("Num walls? ")
     #single_case_test(int(walls_num))
-    s = a_star()
-    print(s)
+    inp = ""
+    lst = []
+    while inp != "exit":
+        inp = input("Element: ")
+        if inp != "exit":
+            ele = inp.split(", ")
+            inp = ((int(ele[0]), int(ele[1])), (int(ele[2]), int(ele[3]), int(ele[4])))
+            lst.append(inp)
+    start_algo(lst)
+    #s = a_star()
+    #print(lst)
